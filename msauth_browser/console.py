@@ -48,9 +48,11 @@ def get_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "--save",
+        nargs="?",
         choices=["roadtools"],
+        const="roadtools",
         default=None,
-        help="Persist tokens using the specified backend.",
+        help="Persist tokens using the specified backend (default: roadtools if no value specified).",
     )
 
     return parser
@@ -118,3 +120,4 @@ def run() -> int:
             )
 
     return 0
+

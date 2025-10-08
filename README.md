@@ -54,7 +54,7 @@ Microsoft first-party apps have hardcoded, pre-approved scopes.
 
 You cannot simply add `ChannelMessage.Read.All` to the scope parameter of the Teams application, the request will fail.
 
-## Why not [microsoft-authentication-library-for-python](https://github.com/AzureAD/microsoft-authentication-library-for-python)?
+## Why not [microsoft-authentication-library-for-python](https://github.com/AzureAD/microsoft-authentication-library-for-python) (MSAL)?
 
 One major limitation is that it [requires localhost](https://msal-python.readthedocs.io/en/latest/) redirect URIs.
 

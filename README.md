@@ -16,7 +16,7 @@ pipx install "git+https://github.com/n3rada/msauth-browser"
 
 ### Playwright
 
-Ensure chromium playwright browser is available before running the `auth` command:
+Ensure chromium playwright browser is available:
 ```shell
 playwright install chromium
 ```

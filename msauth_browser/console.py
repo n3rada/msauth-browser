@@ -65,10 +65,6 @@ def run() -> int:
     parser = get_parser()
     args = parser.parse_args()
 
-    if not args.config:
-        parser.print_help()
-        return 1
-
     setup_logging()
 
     config_name = args.config.lower()
@@ -121,5 +117,6 @@ def run() -> int:
             )
 
     return 0
+
 
 

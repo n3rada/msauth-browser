@@ -38,25 +38,33 @@ class TokenManager:
             logger.error(f"❌ Failed to parse JWT: {e}")
             raise
 
-        self._expires_on = self._payload.get("exp")
-
-        self._tenant_id = self._payload.get("iss")
-
-        if self._tenant_id:
-            self._tenant_id = self._tenant_id.strip("/").split("/").pop()
-            logger.info(f"🔗 Tenant ID: {self._tenant_id}")
+        self._expires_on = self._payload.get("exp", 0)
 
         exp_datetime = self.expiration_datetime
         human_date = exp_datetime.strftime("%A %d %b %Y, %H:%M:%S %Z")
         logger.info(f"🔐 Expires at {human_date}.")
 
+        self._tenant_id = self._payload.get("iss", "")
+        
+
+        if self._tenant_id:
+            self._tenant_id = self._tenant_id.strip("/").split("/").pop()
+            logger.info(f"🔗 Tenant ID: {self._tenant_id}")
+        
+        self._audience = self._payload.get("aud", "")
+        self._scope = self._payload.get("scp", "")
+
+        logger.info(f"🔍 Token audience: {self._audience}")
+
+       
+
     @property
     def audience(self) -> str:
-        return self._payload.get("aud", "")
+        return self._audience
 
     @property
     def scope(self) -> str:
-        return self._payload.get("scp", "")
+        return self._scope
 
     @property
     def access_token(self) -> str:

@@ -29,6 +29,7 @@ def get_parser() -> argparse.ArgumentParser:
         "config",
         nargs="?",
         choices=available_configs if available_configs else None,
+        default="graph",
         help="Predefined configuration to load.",
     )
 
@@ -120,4 +121,5 @@ def run() -> int:
             )
 
     return 0
+
 

@@ -53,13 +53,6 @@ def get_parser() -> argparse.ArgumentParser:
         help="Persist tokens using the specified backend.",
     )
 
-    parser.add_argument(
-        "--show-scopes",
-        action="store_true",
-        default=False,
-        help="Display the configured scopes for the selected app and exit.",
-    )
-
     return parser
 
 
@@ -81,13 +74,8 @@ def run() -> int:
         config = get_config(config_name)
     except KeyError as exc:
         parser.error(str(exc))
-
-    if args.show_scopes:
-        logger.info("🔭 Scopes for the selected configuration:")
-        for scope in config.default_scopes:
-            print(scope)
-        return 0
-
+        return 1
+    
     logger.info(f"🔧 Using configuration '{config_name}' ({config.name})")
     auth_instance = PlaywrightAuth(config)
 

@@ -1,2 +1,73 @@
-# interactive-ms-auth
+# msauth-browser
+
 🎭 Extract Microsoft OAuth tokens using Playwright browser automation.
+
+
+## Installation
+
+```bash
+pip install "git+https://github.com/n3rada/msauth-browser"
+```
+
+Install with `pipx` to keep the environment isolated:
+```bash
+pipx install "git+https://github.com/n3rada/msauth-browser"
+```
+
+### Playwright
+
+Ensure chromium playwright browser is available before running the `auth` command:
+```shell
+playwright install chromium
+```
+
+If installed with `pipx`:
+
+- Windows PowerShell
+```powershell
+& "$env:USERPROFILE\pipx\venvs\msauth-browser\Scripts\playwright.exe" install chromium
+```
+
+## Usage
+
+```shell
+msauth-browser
+```
+
+### Options:
+- `--prt-cookie <JWT>`: Use an `x-ms-RefreshTokenCredential` PRT cookie for SSO-based login.
+- `--headless`: Run Playwright in headless mode.
+
+```shell
+msauth-browser --headless --prt-cookie "<x-ms-RefreshTokenCredential>"
+```
+
+## About the PRT Cookie
+
+The PRT cookie is officially `x-ms-RefreshTokenCredential` and it is a JSON Web Token (JWT). The actual Primary Refresh Token (PRT) is encapsulated within the `refresh_token`, which is encrypted by a key under the control of Entra ID, rendering its contents opaque. 
+
+It can be used as a cookie wired to `login.microsoftonline.com` domain in order to use-it to authenticate to the service while skiping credential prompts.
+
+## Microsoft first-party apps
+
+Microsoft first-party apps have hardcoded, pre-approved scopes.
+
+You cannot simply add `ChannelMessage.Read.All` to the scope parameter of the Teams application—the request will fail.
+
+## Why not [microsoft-authentication-library-for-python](https://github.com/AzureAD/microsoft-authentication-library-for-python)?
+
+One major limitation is that it [requires localhost](https://msal-python.readthedocs.io/en/latest/) redirect URIs.
+
+![MSAL documentation indicating localhost requirement](/media/msal_documentation.png)
+
+It also does not support integrating PRT cookies.
+
+## Adding new app presets
+
+1. Drop a JSON file into [`msauth_browser/configs/`](./msauth_browser/configs/).
+2. Provide the required fields:
+	- `name`
+	- `client_id`
+	- `redirect_uri`
+	- `default_scopes` (array of scopes) — optional; if omitted or empty, the tool defaults to `openid` and `offline_access`.
+3. Optionally include a `slug` field; otherwise the filename (without extension) becomes the lookup key.

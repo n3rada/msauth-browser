@@ -1,0 +1,11 @@
+{
+  "name": "Outlook",
+  "client_id": "9199bf20-a13f-4107-85dc-02114787ef48",
+  "redirect_uri": "https://outlook.office365.com/mail/oauthRedirect.html",
+  "default_scopes": [
+    "openid",
+    "profile",
+    "offline_access",
+    "https://outlook.office.com/.default"
+  ]
+}

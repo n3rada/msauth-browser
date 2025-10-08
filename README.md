@@ -52,7 +52,7 @@ It can be used as a cookie wired to `login.microsoftonline.com` domain in order 
 
 Microsoft first-party apps have hardcoded, pre-approved scopes.
 
-You cannot simply add `ChannelMessage.Read.All` to the scope parameter of the Teams application—the request will fail.
+You cannot simply add `ChannelMessage.Read.All` to the scope parameter of the Teams application, the request will fail.
 
 ## Why not [microsoft-authentication-library-for-python](https://github.com/AzureAD/microsoft-authentication-library-for-python)?
 

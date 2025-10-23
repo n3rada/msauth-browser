@@ -25,5 +25,5 @@ dependencies = [
 repository = "https://github.com/n3rada/msauth-browser"
 
 [project.scripts]
-msauth-browser = 'msauth_browser.console:run'
+msauth-browser = 'msauth_browser.cli:main'
 

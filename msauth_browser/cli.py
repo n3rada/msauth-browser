@@ -60,7 +60,7 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def run() -> int:
+def main() -> int:
     parser = get_parser()
     args = parser.parse_args()
 
@@ -131,6 +131,7 @@ def run() -> int:
             )
 
     return 0
+
 
 
 

@@ -18,6 +18,7 @@ dependencies = [
     "httpx[socks] (>=0.28.1,<0.29.0)",
     "pkce (>=1.0.3,<2.0.0)",
     "playwright (>=1.52.0,<2.0.0)",
+    "pyperclip (>=1.11.0,<2.0.0)",
 ]
 
 [project.urls]

@@ -6,6 +6,7 @@ import sys
 
 # Third party library imports
 from loguru import logger
+import pyperclip
 
 # Local library imports
 from msauth_browser.src.auth import PlaywrightAuth
@@ -60,10 +61,13 @@ def get_parser() -> argparse.ArgumentParser:
 
 
 def run() -> int:
-    """Main CLI entry point used by the package script."""
-
     parser = get_parser()
     args = parser.parse_args()
+
+    # Show help if no cli args provided
+    if len(sys.argv) <= 1:
+        parser.print_help()
+        return 1
 
     setup_logging()
 
@@ -85,7 +89,17 @@ def run() -> int:
     if not tokens:
         return 1
 
-    print(json.dumps(tokens, indent=4))
+    logger.success("✅ Tokens acquired successfully")
+    tokens_printable = json.dumps(tokens, indent=4)
+
+    # Save them in the clipboard for convenience
+    try:
+        pyperclip.copy(tokens_printable)
+        logger.success("📋 Tokens copied to clipboard")
+    except pyperclip.PyperclipException:
+        logger.warning("⚠️ Failed to copy tokens to clipboard")
+
+    print(tokens_printable)
 
     token_manager = TokenManager(
         access_token=tokens["access_token"],

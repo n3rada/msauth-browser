@@ -25,6 +25,7 @@ If installed with `pipx`:
 
 - Windows PowerShell
 ```powershell
+$env:NODE_TLS_REJECT_UNAUTHORIZED = "0"
 & "$env:USERPROFILE\pipx\venvs\msauth-browser\Scripts\playwright.exe" install chromium
 ```
 

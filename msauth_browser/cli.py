@@ -63,12 +63,7 @@ def get_parser() -> argparse.ArgumentParser:
 def main() -> int:
     parser = get_parser()
     args = parser.parse_args()
-
-    # Show help if no cli args provided
-    if len(sys.argv) <= 1:
-        parser.print_help()
-        return 1
-
+    
     setup_logging()
 
     config_name = args.config.lower()
@@ -131,6 +126,7 @@ def main() -> int:
             )
 
     return 0
+
 
 
 

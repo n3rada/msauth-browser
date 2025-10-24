@@ -94,7 +94,9 @@ def main() -> int:
     except pyperclip.PyperclipException:
         logger.warning("⚠️ Failed to copy tokens to clipboard")
 
+    print()
     print(tokens_printable)
+    print()
 
     token_manager = TokenManager(
         access_token=tokens["access_token"],
@@ -126,6 +128,7 @@ def main() -> int:
             )
 
     return 0
+
 
 
 

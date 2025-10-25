@@ -22,7 +22,7 @@ def setup_logging(log_level: str = "INFO"):
     # Remove all Loguru handlers to avoid duplicates
     logger.remove()
 
-    # enqueue=False for synchronous output to maintain ordering
+    # enqueue=False for synchronous output to maintain ordering when using print()
     logger.add(
         sys.stderr,
         enqueue=False,
@@ -31,4 +31,5 @@ def setup_logging(log_level: str = "INFO"):
         format=LOG_FORMAT,
         colorize=True,
     )
+
 

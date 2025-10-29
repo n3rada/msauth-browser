@@ -1,15 +1,26 @@
-# msauth-browser
 
 🎭 Extract Microsoft OAuth tokens using Playwright browser automation.
 
+## 📦 Installation
 
-## Installation
+To install `msauth-browser`, you can use `pip`, `pip3` or `pipx`. Either from `pypi` repository or from `GitHub` source. Prefer using [`pipx`](https://pypa.github.io/pipx/), since it install Python applications in isolated virtual environments.
+
+### From [PyPI](https://pypi.org/project/mssqlclientng/)
+
+```bash
+pipx install msauth-browser
+```
+
+```bash
+pip install msauth-browser
+```
+
+### From GitHub
 
 ```bash
 pip install "git+https://github.com/n3rada/msauth-browser"
 ```
 
-Install with `pipx` to keep the environment isolated:
 ```bash
 pipx install "git+https://github.com/n3rada/msauth-browser"
 ```

@@ -102,6 +102,7 @@ class PlaywrightAuth:
             page.wait_for_load_state("load")
 
             logger.info("🔍 Waiting for authentication to complete")
+            logger.info(f"Searching for this pattern in URL: {self.redirect_uri}"
             redirect_uri_pattern = re.compile(rf"^{re.escape(self.redirect_uri)}")
             try:
                 page.wait_for_url(
@@ -161,3 +162,4 @@ class PlaywrightAuth:
         response_dict["expires_in"] = tokens.get("expires_in")
 
         return response_dict
+

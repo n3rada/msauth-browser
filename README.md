@@ -5,7 +5,7 @@
 
 To install `msauth-browser`, you can use `pip`, `pip3` or `pipx`. Either from `pypi` repository or from `GitHub` source. Prefer using [`pipx`](https://pypa.github.io/pipx/), since it install Python applications in isolated virtual environments.
 
-### From [PyPI](https://pypi.org/project/mssqlclientng/)
+### From [PyPI](https://pypi.org/project/msauth-browser/)
 
 ```bash
 pipx install msauth-browser

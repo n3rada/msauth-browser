@@ -4,7 +4,6 @@ import json
 import threading
 from pathlib import Path
 import time
-from urllib.parse import urlparse
 
 # External library imports
 from loguru import logger

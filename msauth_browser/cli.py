@@ -1,7 +1,6 @@
 # Built-in imports
 import argparse
 import json
-from pathlib import Path
 import time
 
 # Third party library imports
@@ -159,4 +158,3 @@ def main() -> int:
             logger.info("🛑 Exiting on user interrupt")
 
     return 0
-

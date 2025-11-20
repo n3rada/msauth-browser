@@ -124,7 +124,3 @@ class Token:
 
         thread = threading.Thread(target=refresher, daemon=True, name="Token Refresher")
         thread.start()
-
-    def exit_handler(self, signum, frame) -> None:
-        logger.info("🛑 Token refresher thread stopping due to termination signal.")
-        self._exit_event.set()

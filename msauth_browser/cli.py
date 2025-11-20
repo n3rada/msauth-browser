@@ -2,7 +2,6 @@
 import argparse
 import json
 from pathlib import Path
-import sys
 import time
 
 # Third party library imports
@@ -89,6 +88,9 @@ def main() -> int:
 
     setup_logging(args.log_level)
 
+    if args.refresh and not args.save:
+        parser.error("--refresh requires --save to be set.")
+
     config_name = args.config.lower()
 
     try:
@@ -98,12 +100,15 @@ def main() -> int:
         return 1
 
     logger.info(f"🔧 Using configuration '{config_name}' ({config.name})")
-    auth_instance = PlaywrightAuth(config)
+
+    auth_instance = PlaywrightAuth(
+        config,
+        additional_scope=args.add_scope,
+    )
 
     tokens = auth_instance.get_tokens(
         prt_cookie=args.prt_cookie,
         headless=args.headless,
-        additional_scope=args.add_scope,
     )
 
     if not tokens:
@@ -147,7 +152,7 @@ def main() -> int:
             token.save()
 
     if args.refresh:
-        token.start_auto_refresh()
+        token.start_auto_refresh(auth_instance)
         try:
             time.sleep(2**31 - 1)
         except KeyboardInterrupt:

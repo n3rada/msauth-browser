@@ -4,10 +4,12 @@ import json
 import threading
 from pathlib import Path
 import time
+from urllib.parse import urlparse
 
 # External library imports
-import httpx
 from loguru import logger
+
+from msauth_browser.src.auth import PlaywrightAuth
 
 
 class Token:
@@ -70,39 +72,7 @@ class Token:
     def expires_in(self) -> int:
         return max(0, int(self._expires_on - datetime.now(timezone.utc).timestamp()))
 
-    def refresh_access_token(self, refresh_token: str):
-        if not refresh_token:
-            logger.error("⛔ No refresh token available to refresh access token.")
-            return None, None
-
-        response = httpx.post(
-            url="https://login.microsoftonline.com/common/oauth2/v2.0/token",
-            data={
-                "client_id": "de8bc8b5-d9f9-48b1-a8ad-b748da725064",
-                "scope": "openid https://graph.microsoft.com/.default offline_access",
-                "grant_type": "refresh_token",
-                "refresh_token": refresh_token,
-            },
-            headers={"Origin": "https://developer.microsoft.com"},
-            verify=False,
-        )
-
-        if response.status_code != 200:
-            logger.error(f"❌ Failed to refresh token: {response.text}.")
-            return
-
-        new_tokens = response.json()
-
-        self._access_token = new_tokens.get("access_token")
-        self._refresh_token = new_tokens.get("refresh_token")
-        self._expires_on = datetime.now(timezone.utc).timestamp() + new_tokens.get(
-            "expires_in", 0
-        )
-
-        logger.success("🔁 Access token refreshed successfully.")
-        self.save()
-
-    def start_auto_refresh(self) -> None:
+    def start_auto_refresh(self, auth_instance: PlaywrightAuth) -> None:
         def refresher():
             logger.info("🔄 Auto token refresher thread started (CTRL+C to stop).")
             while True:
@@ -118,9 +88,23 @@ class Token:
 
                 logger.debug("🛠️ Time to refresh token.")
                 try:
-                    self.refresh_access_token(self._refresh_token)
+                    tokens = auth_instance.refresh_tokens(self.refresh_token)
+
+                    if tokens is None:
+                        raise Exception("No tokens returned from refresh.")
+
+                    self._access_token = tokens.get("access_token")
+                    self._refresh_token = tokens.get("refresh_token")
+                    self._expires_on = datetime.now(
+                        timezone.utc
+                    ).timestamp() + tokens.get("expires_in", 0)
+
+                    logger.success("🔁 Access token refreshed successfully.")
+                    self.save()
+
                 except Exception as exc:
-                    logger.error(f"❌ Failed to refresh token: {exc}")
+                    logger.error(f"❌ Failed to refresh token (retrying in 60s): {exc}")
+                    time.sleep(60)
 
         thread = threading.Thread(target=refresher, daemon=True, name="Token Refresher")
         thread.start()

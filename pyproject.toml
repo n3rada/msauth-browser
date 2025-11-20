@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "msauth-browser"
-version = "0.2.0"
+version = "0.2.1"
 description = "🎭 Extract Microsoft OAuth tokens using Playwright browser automation."
 authors = [
     {name = "n3rada",email = "72791564+n3rada@users.noreply.github.com"}

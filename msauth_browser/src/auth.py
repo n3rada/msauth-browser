@@ -23,24 +23,60 @@ class PlaywrightAuth:
     using the OAuth 2.0 authorization code flow with PKCE.
     """
 
-    def __init__(self, config: AppConfig, tenant: str = "common") -> None:
+    def __init__(
+        self, config: AppConfig, tenant: str = "common", additional_scope: str = ""
+    ) -> None:
         """
         Initialize the PlaywrightAuth instance.
         """
-        self.client_id = config.client_id
-        self.redirect_uri = config.redirect_uri
-        self.scopes = config.default_scopes or [
-            "openid",
-            "https://graph.microsoft.com/.default",
-            "offline_access",
-        ]
-        self.tenant = tenant
+        self._client_id = config.client_id
+        self._redirect_uri = config.redirect_uri
+
+        self._tenant = tenant
+
+        scopes = config.default_scopes.copy()
+
+        if additional_scope:
+            toRemove = []
+            for scope in config.default_scopes:
+                if scope.find(".default") != -1:
+                    toRemove.append(scope)
+            for scope in toRemove:
+                logger.warning(
+                    f"⚠️ Removing scope '{scope}' as additional scopes are specified."
+                )
+                scopes.remove(scope)
+
+        # Prepare scope string
+        scope_string = " ".join(scopes)
+        if "openid" not in scope_string:
+            scope_string = f"openid {scope_string}"
+
+        if additional_scope:
+            scope_string = f"{scope_string} {additional_scope.strip()}"
+
+        self._scopes = scope_string
+
+    @property
+    def client_id(self) -> str:
+        return self._client_id
+
+    @property
+    def redirect_uri(self) -> str:
+        return self._redirect_uri
+
+    @property
+    def scopes(self) -> str:
+        return self._scopes
+
+    @property
+    def tenant(self) -> str:
+        return self._tenant
 
     def get_tokens(
         self,
         prt_cookie: Optional[str] = None,
         headless: bool = False,
-        additional_scope: str = "",
     ) -> Optional[Dict[str, Any]]:
         """
         Perform interactive browser authentication and retrieve tokens.
@@ -62,28 +98,9 @@ class PlaywrightAuth:
         code_verifier, code_challenge = pkce.generate_pkce_pair()
         state = secrets.token_urlsafe(32)
 
-        if additional_scope:
-            toRemove = []
-            for scope in self.scopes:
-                if scope.find(".default") != -1:
-                    toRemove.append(scope)
-            for scope in toRemove:
-                logger.warning(
-                    f"⚠️ Removing scope '{scope}' as additional scopes are specified."
-                )
-                self.scopes.remove(scope)
-
-        # Prepare scope string
-        scope_string = " ".join(self.scopes)
-        if "openid" not in scope_string:
-            scope_string = f"openid {scope_string}"
-
-        if additional_scope:
-            scope_string = f"{scope_string} {additional_scope.strip()}"
-
         params = {
             "client_id": self.client_id,
-            "scope": scope_string,
+            "scope": self.scopes,
             "redirect_uri": self.redirect_uri,
             "response_type": "code",
             "code_challenge": code_challenge,
@@ -159,7 +176,7 @@ class PlaywrightAuth:
                 data={
                     "client_id": self.client_id,
                     "redirect_uri": self.redirect_uri,
-                    "scope": scope_string,
+                    "scope": self.scopes,
                     "code": code,
                     "code_verifier": code_verifier,
                     "grant_type": "authorization_code",
@@ -173,6 +190,41 @@ class PlaywrightAuth:
             return None
 
         logger.success("✅ Token exchange successful")
+
+        tokens = response.json()
+        response_dict["refresh_token"] = tokens.get("refresh_token")
+        response_dict["access_token"] = tokens.get("access_token")
+        response_dict["expires_in"] = tokens.get("expires_in")
+        response_dict["scope"] = tokens.get("scope")
+
+        return response_dict
+
+    def refresh_tokens(self, refresh_token: str) -> Optional[Dict[str, Any]]:
+
+        response_dict = {
+            "refresh_token": None,
+            "access_token": None,
+            "expires_in": None,
+            "scope": None,
+        }
+
+        if not refresh_token:
+            raise Exception("⛔ No refresh token available to refresh access token.")
+
+        response = httpx.post(
+            url="https://login.microsoftonline.com/common/oauth2/v2.0/token",
+            data={
+                "client_id": self.client_id,
+                "scope": self.scopes,
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token,
+            },
+            headers={"Origin": urlparse(self.redirect_uri).netloc},
+            verify=False,
+        )
+
+        if response.status_code != 200:
+            raise Exception(f"Failed to refresh token: {response.text}.")
 
         tokens = response.json()
         response_dict["refresh_token"] = tokens.get("refresh_token")

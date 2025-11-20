@@ -149,8 +149,9 @@ def main() -> int:
     if args.refresh:
         token.start_auto_refresh()
         try:
-            time.sleep(2**31 - 1)
+            time.sleep((1 << 31) - 1)
         except KeyboardInterrupt:
             logger.info("🛑 Exiting on user interrupt")
 
     return 0
+

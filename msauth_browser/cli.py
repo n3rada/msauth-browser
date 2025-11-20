@@ -3,6 +3,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import time
 
 # Third party library imports
 from loguru import logger
@@ -10,7 +11,7 @@ import pyperclip
 
 # Local library imports
 from msauth_browser.src.auth import PlaywrightAuth
-from msauth_browser.src.tokens import TokenManager
+from msauth_browser.src.tokens import Token
 from msauth_browser.src.config import get_config, list_configs
 from msauth_browser.src.logbook import setup_logging
 
@@ -32,6 +33,13 @@ def get_parser() -> argparse.ArgumentParser:
         choices=available_configs if available_configs else None,
         default="graph",
         help="Predefined configuration to load.",
+    )
+
+    parser.add_argument(
+        "--add-scope",
+        type=str,
+        default="",
+        help="Additional scope to request during authentication",
     )
 
     parser.add_argument(
@@ -57,14 +65,29 @@ def get_parser() -> argparse.ArgumentParser:
         help="Persist tokens using the specified backend (default: roadtools if no value specified).",
     )
 
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        default=False,
+        help="Start a background thread to auto-refresh the access token before it expires.",
+    )
+
+    parser.add_argument(
+        "--log-level",
+        type=str,
+        choices=["TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="INFO",
+        help="Set the logging level (default: INFO).",
+    )
+
     return parser
 
 
 def main() -> int:
     parser = get_parser()
     args = parser.parse_args()
-    
-    setup_logging()
+
+    setup_logging(args.log_level)
 
     config_name = args.config.lower()
 
@@ -73,19 +96,23 @@ def main() -> int:
     except KeyError as exc:
         parser.error(str(exc))
         return 1
-    
+
     logger.info(f"🔧 Using configuration '{config_name}' ({config.name})")
     auth_instance = PlaywrightAuth(config)
 
     tokens = auth_instance.get_tokens(
-        prt_cookie=args.prt_cookie, headless=args.headless
+        prt_cookie=args.prt_cookie,
+        headless=args.headless,
+        additional_scope=args.add_scope,
     )
 
     if not tokens:
         return 1
 
     logger.success("✅ Tokens acquired successfully")
-    tokens_printable = json.dumps(tokens, indent=4)
+    tokens_printable = tokens.copy()
+    tokens_printable.pop("scope", None)
+    tokens_printable = json.dumps(tokens_printable, indent=4)
 
     # Save them in the clipboard for convenience
     try:
@@ -98,39 +125,33 @@ def main() -> int:
     print(tokens_printable)
     print()
 
-    token_manager = TokenManager(
+    token = Token(
         access_token=tokens["access_token"],
         refresh_token=tokens.get("refresh_token") or "",
+        expires_in=tokens["expires_in"],
+        scope=tokens.get("scope") or "",
+        path=".roadtools_auth" if args.save == "roadtools" else "",
     )
 
-    scope_value = token_manager.scope or "(no scp claim present)"
-    logger.info(f"🔭 Access token scopes: {scope_value}")
+    if token.scope:
+        scopes = "\n\t- " + "\n\t- ".join(token.scope.split(" "))
+        logger.info(f"🔭 Access token scopes: {scopes}")
 
     if args.save:
         logger.info("💾 Saving tokens")
-        if args.save == "roadtools":
-
-            Path(".roadtools_auth").write_text(
-                json.dumps(
-                    {
-                        "accessToken": tokens["access_token"],
-                        "refreshToken": tokens["refresh_token"],
-                        "expiresIn": tokens["expires_in"],
-                    },
-                    indent=4,
-                ),
-                encoding="utf-8",
-            )
-            logger.success("✅ Tokens saved to .roadtools_auth")
-        else:
+        if args.save != "roadtools":
             logger.warning(
                 f"💾 Save option '{args.save}' is not implemented; skipping persistence."
             )
+        else:
+            token.save()
+
+    if args.refresh:
+        token.start_auto_refresh()
+        try:
+            time.sleep((1 << 31) - 1)
+        except KeyboardInterrupt:
+            logger.info("🛑 Exiting on user interrupt")
 
     return 0
-
-
-
-
-
 

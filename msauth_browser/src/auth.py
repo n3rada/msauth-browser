@@ -37,7 +37,10 @@ class PlaywrightAuth:
         self.tenant = tenant
 
     def get_tokens(
-        self, prt_cookie: Optional[str] = None, headless: bool = False
+        self,
+        prt_cookie: Optional[str] = None,
+        headless: bool = False,
+        additional_scope: str = "",
     ) -> Optional[Dict[str, Any]]:
         """
         Perform interactive browser authentication and retrieve tokens.
@@ -54,14 +57,29 @@ class PlaywrightAuth:
             "refresh_token": None,
             "access_token": None,
             "expires_in": None,
+            "scope": None,
         }
         code_verifier, code_challenge = pkce.generate_pkce_pair()
         state = secrets.token_urlsafe(32)
+
+        if additional_scope:
+            toRemove = []
+            for scope in self.scopes:
+                if scope.find(".default") != -1:
+                    toRemove.append(scope)
+            for scope in toRemove:
+                logger.warning(
+                    f"⚠️ Removing scope '{scope}' as additional scopes are specified."
+                )
+                self.scopes.remove(scope)
 
         # Prepare scope string
         scope_string = " ".join(self.scopes)
         if "openid" not in scope_string:
             scope_string = f"openid {scope_string}"
+
+        if additional_scope:
+            scope_string = f"{scope_string} {additional_scope.strip()}"
 
         params = {
             "client_id": self.client_id,
@@ -160,7 +178,6 @@ class PlaywrightAuth:
         response_dict["refresh_token"] = tokens.get("refresh_token")
         response_dict["access_token"] = tokens.get("access_token")
         response_dict["expires_in"] = tokens.get("expires_in")
+        response_dict["scope"] = tokens.get("scope")
 
         return response_dict
-
-

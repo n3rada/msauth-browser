@@ -70,7 +70,7 @@ You cannot simply add `ChannelMessage.Read.All` to the scope parameter of the Te
 
 One major limitation is that it [requires localhost](https://msal-python.readthedocs.io/en/latest/) redirect URIs.
 
-![MSAL documentation indicating localhost requirement](/media/msal_documentation.png)
+![MSAL documentation indicating localhost requirement](https://github.com/n3rada/msauth-browser/blob/main/media/msal_documentation.png)
 
 It also does not support integrating PRT cookies.
 

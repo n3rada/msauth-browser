@@ -123,6 +123,8 @@ class PlaywrightAuth:
                 has_touch=False,
             )
 
+            logger.info(f"UA in use: {page.evaluate('navigator.userAgent')}")
+
             if prt_cookie:
                 context.add_cookies(
                     [
@@ -240,4 +242,5 @@ class PlaywrightAuth:
         response_dict["scope"] = tokens.get("scope")
 
         return response_dict
+
 

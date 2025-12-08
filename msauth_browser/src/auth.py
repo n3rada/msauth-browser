@@ -121,9 +121,8 @@ class PlaywrightAuth:
                 device_scale_factor=1,
                 is_mobile=False,
                 has_touch=False,
+                color_scheme="light",
             )
-
-            logger.info(f"UA in use: {page.evaluate('navigator.userAgent')}")
 
             if prt_cookie:
                 context.add_cookies(
@@ -140,6 +139,8 @@ class PlaywrightAuth:
                 )
 
             page = context.new_page()
+            logger.info(f"UA in use: {page.evaluate('navigator.userAgent')}")
+
             logger.info(f"🔗 Opening auth URL: {auth_url}")
 
             page.goto(auth_url)
@@ -242,5 +243,6 @@ class PlaywrightAuth:
         response_dict["scope"] = tokens.get("scope")
 
         return response_dict
+
 
 

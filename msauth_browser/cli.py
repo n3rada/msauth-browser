@@ -1,3 +1,5 @@
+# msauth_browser/cli.py
+
 # Built-in imports
 import argparse
 import json
@@ -8,10 +10,10 @@ from loguru import logger
 import pyperclip
 
 # Local library imports
-from msauth_browser.src.auth import PlaywrightAuth
-from msauth_browser.src.tokens import Token
-from msauth_browser.src.config import get_config, list_configs
-from msauth_browser.src.logbook import setup_logging
+from .core.auth import PlaywrightAuth
+from .core.tokens import Token
+from .core.config import get_config, list_configs
+from .core.logbook import setup_logging
 
 
 def get_parser() -> argparse.ArgumentParser:

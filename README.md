@@ -36,8 +36,12 @@ If installed with `pipx`:
 
 - Windows PowerShell
 ```powershell
+& "$(pipx environment --value PIPX_LOCAL_VENVS)\msauth-browser\Scripts\playwright.exe" install chromium
+```
+
+If you are in a corporate environment with TLS inspection (e.g., using Zscaler):
+```powershell
 $env:NODE_TLS_REJECT_UNAUTHORIZED = "0"
-& "$env:USERPROFILE\pipx\venvs\msauth-browser\Scripts\playwright.exe" install chromium
 ```
 
 ## Usage

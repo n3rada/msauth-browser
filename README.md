@@ -80,7 +80,7 @@ It also does not support integrating PRT cookies.
 
 ## Adding new app presets
 
-1. Drop a JSON file into [`msauth_browser/configs/`](./msauth_browser/configs/).
+1. Drop a JSON file into [`msauth_browser/configs/`](./src/msauth_browser/configs/).
 2. Provide the required fields:
 	- `name`
 	- `client_id`

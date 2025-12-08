@@ -16,6 +16,7 @@ from playwright.sync_api import sync_playwright
 # Internal imports
 from .config import AppConfig
 
+AUTH_TIMEOUT = 5 * 60 * 1000  # 5 minutes
 
 class PlaywrightAuth:
     """
@@ -175,22 +176,26 @@ class PlaywrightAuth:
             try:
                 page.wait_for_url(
                     redirect_uri_pattern,
-                    timeout=2 * 60 * 1000,
-                    wait_until="load",
+                    timeout=AUTH_TIMEOUT,
+                    wait_until="domcontentloaded",
                 )
             except TimeoutError:
                 logger.error("⏱️ Timeout waiting for auth redirect.")
+                logger.error(f"Final URL at timeout: {page.url}")
                 return None
             except Exception as exc:
-                logger.error(f"❌ Error during auth redirect: {exc}")
+                logger.error("❌ Authentication flow interrupted.")
+                logger.error(f"Exception: {exc}")
+                logger.error(f"Last URL: {page.url}")
                 return None
             else:
                 final_url = page.url
                 logger.success("🔄 Redirection received.")
             finally:
-                context.close()
-                browser.close()
-                logger.info("🖥️ Browser closed.")
+                if 'final_url' in locals():
+                    context.close()
+                    browser.close()
+                    logger.info("🖥️ Browser closed.")
 
         code = parse_qs(urlparse(final_url).query).get("code", [None])[0]
 

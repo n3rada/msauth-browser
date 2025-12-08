@@ -1,0 +1,10 @@
+{
+  "name": "PowerApps - apps.powerapps.com",
+  "client_id": "3e62f81e-590b-425b-9531-cad6683656cf",
+  "redirect_uri": "https://apps.powerapps.com/auth/v3",
+  "default_scopes": [
+    "openid",
+    "profile",
+    "offline_access"
+  ]
+}

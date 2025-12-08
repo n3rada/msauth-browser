@@ -1,0 +1,10 @@
+{
+  "name": "Microsoft Teams",
+  "client_id": "5e3ce6c0-2b1f-4285-8d4b-75ee78787346",
+  "redirect_uri": "https://teams.microsoft.com/v2",
+  "default_scopes": [
+    "openid",
+    "profile",
+    "offline_access"
+  ]
+}

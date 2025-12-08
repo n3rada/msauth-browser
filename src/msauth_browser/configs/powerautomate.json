@@ -1,0 +1,10 @@
+{
+  "name": "PowerAutomate",
+  "client_id": "6204c1d1-4712-4c46-a7d9-3ed63d992682",
+  "redirect_uri": "https://make.powerautomate.com/auth",
+  "default_scopes": [
+    "openid",
+    "profile",
+    "offline_access"
+  ]
+}

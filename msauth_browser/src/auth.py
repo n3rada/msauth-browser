@@ -114,7 +114,14 @@ class PlaywrightAuth:
 
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=headless, args=["--no-sandbox"])
-            context = browser.new_context()
+            context = browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0",
+                locale="en-US",
+                viewport={"width": 1920, "height": 1080},
+                device_scale_factor=1,
+                is_mobile=False,
+                has_touch=False,
+            )
 
             if prt_cookie:
                 context.add_cookies(
@@ -233,3 +240,4 @@ class PlaywrightAuth:
         response_dict["scope"] = tokens.get("scope")
 
         return response_dict
+

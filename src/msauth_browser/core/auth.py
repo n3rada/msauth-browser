@@ -119,7 +119,9 @@ class PlaywrightAuth:
                 headless=headless,
                 args=[
                     "--no-sandbox",
-                    "--disable-blink-features=AutomationControlled"
+                    "--disable-features=BlockInsecurePrivateNetworkRequests",
+                    "--disable-localhost-ipa",
+                    "--host-resolver-rules=MAP localhost 0.0.0.0, MAP 127.0.0.1 0.0.0.0, MAP ::1 0.0.0.0",
                 ],
             )
 

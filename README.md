@@ -50,7 +50,14 @@ $env:NODE_TLS_REJECT_UNAUTHORIZED = "0"
 msauth-browser
 ```
 
+Or, to have the right to send emails through Microsoft Graph API:
+
+```shell
+msauth-browser --add-scope "https://graph.microsoft.com/Mail.Send"
+```
+
 ### Options:
+- `--add-scope <scope>`: Add OpenID Connect (OIDC) scopes.
 - `--prt-cookie <JWT>`: Use an `x-ms-RefreshTokenCredential` PRT cookie for SSO-based login.
 - `--headless`: Run Playwright in headless mode.
 

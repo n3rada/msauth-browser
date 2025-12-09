@@ -182,9 +182,10 @@ class PlaywrightAuth:
                 logger.error("⏱️ Timeout waiting for auth redirect.")
                 logger.error(f"Final URL at timeout: {page.url}")
                 return None
-            except Exception:
+            except Exception as exc:
                 logger.error("❌ Authentication flow interrupted.")
                 logger.error(f"Last URL: {page.url}")
+                logger.error(f"Exception: {exc}")
                 return None
             else:
                 final_url = page.url

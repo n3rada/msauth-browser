@@ -131,8 +131,8 @@ class PlaywrightAuth:
                 locale="en-US",
 
                 # Screen & windowing
-                viewport={"width": 1075, "height": 1274},
-                screen={"width": 2560, "height": 1440},
+                viewport={"width": 1280, "height": 720},
+                screen={"width": 1366, "height": 768},
                 device_scale_factor=1,
 
                 # Input model

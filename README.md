@@ -53,7 +53,7 @@ msauth-browser
 Or, to have the right to send emails through Microsoft Graph API:
 
 ```shell
-msauth-browser --add-scope "https://graph.microsoft.com/Mail.Send"
+msauth-browser --add-scope "https://graph.microsoft.com/Mail.Send","https://graph.microsoft.com/User.Read"
 ```
 
 ### Options:

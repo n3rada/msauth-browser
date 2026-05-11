@@ -1,6 +1,6 @@
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.11.8,<0.12"]
+build-backend = "uv_build"
 
 [project]
 name = "msauth-browser"
@@ -14,11 +14,11 @@ readme = "README.md"
 requires-python = ">=3.11,<4.0"
 
 dependencies = [
-    "loguru (>=0.7.3,<0.8.0)",
-    "httpx[socks] (>=0.28.1,<0.29.0)",
-    "pkce (>=1.0.3,<2.0.0)",
-    "playwright (>=1.52.0,<2.0.0)",
-    "pyperclip (>=1.11.0,<2.0.0)",
+    "loguru>=0.7.3,<0.8.0",
+    "httpx[socks]>=0.28.1,<0.29.0",
+    "pkce>=1.0.3,<2.0.0",
+    "playwright>=1.52.0,<2.0.0",
+    "pyperclip>=1.11.0,<2.0.0",
 ]
 
 [project.urls]
@@ -26,4 +26,9 @@ repository = "https://github.com/n3rada/msauth-browser"
 
 [project.scripts]
 msauth-browser = 'msauth_browser.cli:main'
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+]
 

@@ -2,9 +2,12 @@
 
 Extract Microsoft OAuth tokens using [Playwright](https://playwright.dev/python/) browser automation.
 
-Microsoft Graph API requires a valid OAuth access token to perform delegated actions like sending emails, reading mailboxes, or enumerating users. Getting that token programmatically is surprisingly painful: MSAL requires localhost redirect URIs, and pure API flows can't handle MFA prompts, Conditional Access policies, or CAPTCHAs.
+Microsoft Graph API requires a valid OAuth access token to perform delegated actions like sending emails, reading mailboxes, or enumerating users. Getting that token programmatically is surprisingly painful: MSAL requires localhost redirect URIs, and pure API flows cannot handle MFA prompts, Conditional Access policies, or CAPTCHAs.
 
-`msauth-browser` solves this by driving a real Chromium browser through the full OAuth 2.0 authorization code flow with PKCE. It handles any interactive challenge exactly as a legitimate user would, and gives you back a ready-to-use access token (and refresh token) that you can feed into your scripts and tooling.
+`msauth-browser` solves this by driving a real Chromium browser through the full [OAuth 2.0 authorization code flow with PKCE](https://datatracker.ietf.org/doc/html/rfc7636). It handles any interactive challenge exactly as a legitimate user would, and gives you back a ready-to-use access token (and refresh token) that you can feed into your scripts and tooling.
+
+> [!TIP]
+> Pair with [ROADtools](https://github.com/dirkjanm/ROADtools) or [GraphSpy](https://github.com/RedByte1337/GraphSpy) for downstream enumeration and exploitation using the acquired tokens.
 
 ## 🎯 Why This Tool?
 
@@ -158,8 +161,34 @@ It also does not support injecting PRT cookies into the authentication flow.
 	- `default_scopes` (array of scopes), optional; if omitted or empty, defaults to `openid` and `offline_access`.
 3. Optionally include a `slug` field; otherwise the filename (without extension) becomes the lookup key.
 
+## 🤝 Contributing
+
+Contributions are welcome and appreciated! Whether it is fixing bugs, adding new app presets, improving the documentation, or sharing feedback, your effort is valued and makes a difference.
+
+Open-source thrives on collaboration and recognition. Contributions, large or small, help improve the tool and its community. Your time and effort are truly valued.
+
+## 🙏 Acknowledgments
+
+- Browser automation powered by [Playwright](https://playwright.dev/python/).
+- PKCE flow handled by [pkce](https://github.com/xzava/pkce).
+- Token persistence format compatible with [ROADtools](https://github.com/dirkjanm/ROADtools) by [@_dirkjan](https://twitter.com/_dirkjan).
+- Logging powered by [Loguru](https://github.com/Delgan/loguru).
+
 ## ⚠️ Disclaimer
 
 **This tool is provided strictly for defensive security research, education, and authorized penetration testing.** You must have **explicit written authorization** before running this software against any system you do not own.
 
-Misuse of this project may result in legal action. Use responsibly and ethically. Always respect the law and obtain proper authorization.
+This tool is designed for educational purposes only and is intended to assist security professionals in understanding and testing the security of Microsoft Entra ID environments in authorized engagements.
+
+Acceptable environments include:
+- Private lab environments you control (local VMs, isolated networks).
+- Sanctioned learning platforms (CTFs, Hack The Box, OffSec exam scenarios).
+- Formal penetration-test or red-team engagements with documented customer consent.
+
+Misuse of this project may result in legal action.
+
+## ⚖️ Legal Notice
+
+Any unauthorized use of this tool in real-world environments or against systems without explicit permission from the system owner is strictly prohibited and may violate legal and ethical standards. The creators and contributors of this tool are not responsible for any misuse or damage caused.
+
+Use responsibly and ethically. Always respect the law and obtain proper authorization.

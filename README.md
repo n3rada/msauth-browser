@@ -72,14 +72,19 @@ Ensure the Chromium browser is available:
 playwright install chromium
 ```
 
+If installed with `uv tool install`:
+
+```shell
+uv tool run --from msauth-browser playwright install chromium
+```
+
 If installed with `pipx`:
 
-- Windows PowerShell
 ```powershell
 & "$(pipx environment --value PIPX_LOCAL_VENVS)\msauth-browser\Scripts\playwright.exe" install chromium
 ```
 
-If you are in a corporate environment with TLS inspection (e.g., using Zscaler):
+If you are in a corporate environment with TLS inspection (e.g., using Zscaler), disable certificate verification first:
 ```powershell
 $env:NODE_TLS_REJECT_UNAUTHORIZED = "0"
 ```

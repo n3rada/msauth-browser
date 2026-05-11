@@ -14,6 +14,7 @@ from .core.auth import PlaywrightAuth
 from .core.tokens import Token
 from .core.config import get_config, list_configs
 from .core.logbook import setup_logging
+from . import __version__
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -25,6 +26,13 @@ def get_parser() -> argparse.ArgumentParser:
         description="Interactive Microsoft Authentication - Extract OAuth tokens using browser automation",
         allow_abbrev=True,
         exit_on_error=True,
+    )
+
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
 
     parser.add_argument(
@@ -144,7 +152,7 @@ def main() -> int:
         logger.info(f"🔭 Access token scopes: {scopes}")
 
     if args.save:
-        logger.info("💾 Saving tokens")
+        logger.info(f"💾 Saving tokens to {token.path}")
         if args.save != "roadtools":
             logger.warning(
                 f"💾 Save option '{args.save}' is not implemented; skipping persistence."

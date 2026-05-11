@@ -1,33 +1,70 @@
+# 🎭 msauth-browser
 
-🎭 Extract Microsoft OAuth tokens using Playwright browser automation.
+Extract Microsoft OAuth tokens using [Playwright](https://playwright.dev/python/) browser automation.
+
+Microsoft Graph API requires a valid OAuth access token to perform delegated actions like sending emails, reading mailboxes, or enumerating users. Getting that token programmatically is surprisingly painful: MSAL requires localhost redirect URIs, and pure API flows can't handle MFA prompts, Conditional Access policies, or CAPTCHAs.
+
+`msauth-browser` solves this by driving a real Chromium browser through the full OAuth 2.0 authorization code flow with PKCE. It handles any interactive challenge exactly as a legitimate user would, and gives you back a ready-to-use access token (and refresh token) that you can feed into your scripts and tooling.
+
+## 🎯 Why This Tool?
+
+- **Real browser, real auth**: navigates MFA, Conditional Access, device compliance checks, and CAPTCHAs that API-only tools cannot handle.
+- **No localhost redirect required**: unlike MSAL, works with any redirect URI, including first-party Microsoft app URIs.
+- **First-party app presets**: authenticate as Graph Explorer, Teams, Outlook, etc. to leverage their pre-approved scopes.
+- **PRT cookie injection**: inject an `x-ms-RefreshTokenCredential` cookie for SSO-based login, bypassing credential prompts entirely.
+- **ROADtools integration**: save tokens in `.roadtools_auth` format for downstream use with [ROADtools](https://github.com/dirkjanm/ROADtools) or [GraphSpy](https://github.com/RedByte1337/GraphSpy), with optional auto-refresh.
 
 ## 📦 Installation
 
-To install `msauth-browser`, you can use `pip`, `pip3` or `pipx`. Either from `pypi` repository or from `GitHub` source. Prefer using [`pipx`](https://pypa.github.io/pipx/), since it install Python applications in isolated virtual environments.
+Prefer using [`uv`](https://docs.astral.sh/uv/), a fast Python package manager that installs tools in isolated environments. Alternatively, [`pipx`](https://pypa.github.io/pipx/) or `pip` work as well.
 
-### From [PyPI](https://pypi.org/project/msauth-browser/)
+### With [uv](https://docs.astral.sh/uv/) (recommended)
+
+[`uv tool install`](https://docs.astral.sh/uv/guides/tools/#installing-tools) persistently installs the tool and adds it to your `PATH`:
+
+**From [PyPI](https://pypi.org/project/msauth-browser/):**
+
+```bash
+uv tool install msauth-browser
+```
+
+**From GitHub (latest):**
+
+```bash
+uv tool install git+https://github.com/n3rada/msauth-browser.git
+```
+
+To upgrade later:
+
+```bash
+uv tool upgrade msauth-browser
+```
+
+> [!TIP]
+> You can also run it **without installing** using [`uvx`](https://docs.astral.sh/uv/guides/tools/#running-tools):
+> ```bash
+> uvx msauth-browser --help
+> uvx --from git+https://github.com/n3rada/msauth-browser.git msauth-browser --help
+> ```
+
+### With pipx or pip
 
 ```bash
 pipx install msauth-browser
+# or from GitHub
+pipx install "git+https://github.com/n3rada/msauth-browser"
 ```
 
 ```bash
 pip install msauth-browser
-```
-
-### From GitHub
-
-```bash
+# or from GitHub
 pip install "git+https://github.com/n3rada/msauth-browser"
 ```
 
-```bash
-pipx install "git+https://github.com/n3rada/msauth-browser"
-```
+### 🎭 Playwright
 
-### Playwright
+Ensure the Chromium browser is available:
 
-Ensure chromium playwright browser is available:
 ```shell
 playwright install chromium
 ```
@@ -44,53 +81,85 @@ If you are in a corporate environment with TLS inspection (e.g., using Zscaler):
 $env:NODE_TLS_REJECT_UNAUTHORIZED = "0"
 ```
 
-## Usage
+## 🧸 Usage
 
 ```shell
+msauth-browser [config] [options]
+```
+
+The default configuration is `graph` (Graph Explorer). Available presets:
+
+| Preset | Application |
+|--------|-------------|
+| `graph` | Graph Explorer |
+| `outlook` | Outlook |
+| `teams` | Microsoft Teams |
+| `powerapps` | Power Apps |
+| `powerautomate` | Power Automate |
+
+### 📋 Examples
+
+```shell
+# Default: authenticate as Graph Explorer
 msauth-browser
-```
 
-Or, to have the right to send emails through Microsoft Graph API:
+# Authenticate as Microsoft Teams
+msauth-browser teams
 
-```shell
-msauth-browser --add-scope "https://graph.microsoft.com/Mail.Send","https://graph.microsoft.com/User.Read"
-```
+# Request additional Mail.Send scope on Graph Explorer
+msauth-browser --add-scope "https://graph.microsoft.com/Mail.Send"
 
-### Options:
-- `--add-scope <scope>`: Add OpenID Connect (OIDC) scopes.
-- `--prt-cookie <JWT>`: Use an `x-ms-RefreshTokenCredential` PRT cookie for SSO-based login.
-- `--headless`: Run Playwright in headless mode.
-
-```shell
+# Use a PRT cookie for SSO (headless, no visible browser)
 msauth-browser --headless --prt-cookie "<x-ms-RefreshTokenCredential>"
+
+# Save tokens in ROADtools format with auto-refresh
+msauth-browser --save roadtools --refresh
 ```
 
-## About the PRT Cookie
+### ⚙️ Options
 
-The PRT cookie is officially `x-ms-RefreshTokenCredential` and it is a JSON Web Token (JWT). The actual Primary Refresh Token (PRT) is encapsulated within the `refresh_token`, which is encrypted by a key under the control of Entra ID, rendering its contents opaque. 
+| Flag | Description |
+|------|-------------|
+| `--add-scope <scope>` | Additional OIDC scope(s) to request |
+| `--prt-cookie <JWT>` | `x-ms-RefreshTokenCredential` PRT cookie for SSO |
+| `--headless` | Run the browser in headless mode |
+| `--save [roadtools]` | Persist tokens (currently supports `roadtools` format) |
+| `--refresh` | Auto-refresh the access token before expiry (requires `--save`) |
+| `--log-level <LEVEL>` | Set log verbosity (`TRACE`, `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`) |
+| `-V`, `--version` | Show version and exit |
 
-It can be used as a cookie wired to `login.microsoftonline.com` domain in order to use-it to authenticate to the service while skiping credential prompts.
+## 🔑 About the PRT Cookie
 
-## Microsoft first-party apps
+The PRT cookie is officially `x-ms-RefreshTokenCredential` and it is a JSON Web Token (JWT). The actual Primary Refresh Token (PRT) is encapsulated within the `refresh_token` field, which is encrypted by a key under the control of Entra ID, rendering its contents opaque.
+
+It can be used as a cookie wired to `login.microsoftonline.com` to authenticate and skip credential prompts entirely.
+
+## 🏢 Microsoft First-Party Apps
 
 Microsoft first-party apps have hardcoded, pre-approved scopes.
 
-You cannot simply add `ChannelMessage.Read.All` to the scope parameter of the Teams application, the request will fail.
+You cannot simply add `ChannelMessage.Read.All` to the scope parameter of the Teams application, the request will fail. Use `--add-scope` only with scopes that are valid for the selected app configuration.
 
-## Why not [microsoft-authentication-library-for-python](https://github.com/AzureAD/microsoft-authentication-library-for-python) (MSAL)?
+## ❓ Why Not [MSAL](https://github.com/AzureAD/microsoft-authentication-library-for-python)?
 
-One major limitation is that it [requires localhost](https://msal-python.readthedocs.io/en/latest/) redirect URIs.
+One major limitation is that MSAL [requires localhost](https://msal-python.readthedocs.io/en/latest/) redirect URIs.
 
 ![MSAL documentation indicating localhost requirement](https://github.com/n3rada/msauth-browser/blob/main/media/msal_documentation.png)
 
-It also does not support integrating PRT cookies.
+It also does not support injecting PRT cookies into the authentication flow.
 
-## Adding new app presets
+## 🧩 Adding New App Presets
 
 1. Drop a JSON file into [`msauth_browser/configs/`](./src/msauth_browser/configs/).
 2. Provide the required fields:
 	- `name`
 	- `client_id`
 	- `redirect_uri`
-	- `default_scopes` (array of scopes) — optional; if omitted or empty, the tool defaults to `openid` and `offline_access`.
+	- `default_scopes` (array of scopes), optional; if omitted or empty, defaults to `openid` and `offline_access`.
 3. Optionally include a `slug` field; otherwise the filename (without extension) becomes the lookup key.
+
+## ⚠️ Disclaimer
+
+**This tool is provided strictly for defensive security research, education, and authorized penetration testing.** You must have **explicit written authorization** before running this software against any system you do not own.
+
+Misuse of this project may result in legal action. Use responsibly and ethically. Always respect the law and obtain proper authorization.

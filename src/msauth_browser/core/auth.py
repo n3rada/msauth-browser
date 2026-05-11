@@ -191,10 +191,9 @@ class PlaywrightAuth:
                 final_url = page.url
                 logger.success("🔄 Redirection received.")
             finally:
-                if 'final_url' in locals():
-                    context.close()
-                    browser.close()
-                    logger.info("🖥️ Browser closed.")
+                context.close()
+                browser.close()
+                logger.info("🖥️ Browser closed.")
 
         code = parse_qs(urlparse(final_url).query).get("code", [None])[0]
 
@@ -249,7 +248,7 @@ class PlaywrightAuth:
             raise Exception("⛔ No refresh token available to refresh access token.")
 
         response = httpx.post(
-            url="https://login.microsoftonline.com/common/oauth2/v2.0/token",
+            url=f"https://login.microsoftonline.com/{self.tenant}/oauth2/v2.0/token",
             data={
                 "client_id": self.client_id,
                 "scope": self.scopes,

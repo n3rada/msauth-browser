@@ -44,6 +44,3 @@ def setup_logging(level: str = "INFO"):
     )
 
     logger.trace(f"Logger initialized at level {level}")
-
-
-

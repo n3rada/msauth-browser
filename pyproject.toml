@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "msauth-browser"
-version = "0.2.3"
+version = "0.2.4"
 description = "🎭 Extract Microsoft OAuth tokens using Playwright browser automation."
 authors = [
     {name = "n3rada",email = "72791564+n3rada@users.noreply.github.com"}

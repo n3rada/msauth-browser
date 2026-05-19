@@ -56,7 +56,9 @@ class PlaywrightAuth:
             scope_string = f"openid {scope_string}"
 
         if additional_scope:
-            scope_string = f"{scope_string} {additional_scope.strip()}"
+            # Normalize: accept comma- and/or space-separated scopes
+            extra_scopes = [s.strip() for s in re.split(r"[\s,]+", additional_scope) if s.strip()]
+            scope_string = f"{scope_string} {' '.join(extra_scopes)}"
 
         self._scopes = scope_string
 

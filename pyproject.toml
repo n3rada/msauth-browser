@@ -26,6 +26,7 @@ repository = "https://github.com/n3rada/msauth-browser"
 
 [project.scripts]
 msauth-browser = 'msauth_browser.cli:main'
+playwright = 'playwright.__main__:main'
 
 [dependency-groups]
 dev = [

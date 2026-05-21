@@ -14,9 +14,10 @@ from loguru import logger
 from playwright.sync_api import sync_playwright
 
 # Internal imports
-from .config import AppConfig
+from ..configs import AppConfig
 
 AUTH_TIMEOUT = 5 * 60 * 1000  # 5 minutes
+
 
 class PlaywrightAuth:
     """
@@ -57,7 +58,9 @@ class PlaywrightAuth:
 
         if additional_scope:
             # Normalize: accept comma- and/or space-separated scopes
-            extra_scopes = [s.strip() for s in re.split(r"[\s,]+", additional_scope) if s.strip()]
+            extra_scopes = [
+                s.strip() for s in re.split(r"[\s,]+", additional_scope) if s.strip()
+            ]
             scope_string = f"{scope_string} {' '.join(extra_scopes)}"
 
         self._scopes = scope_string
@@ -82,6 +85,8 @@ class PlaywrightAuth:
         self,
         prt_cookie: Optional[str] = None,
         headless: bool = False,
+        keep_open: bool = False,
+        allow_localhost: bool = False,
     ) -> Optional[Dict[str, Any]]:
         """
         Perform interactive browser authentication and retrieve tokens.
@@ -89,6 +94,8 @@ class PlaywrightAuth:
         Args:
             prt_cookie: Optional X-Ms-RefreshTokenCredential PRT cookie for SSO
             headless: Run browser in headless mode (default: False)
+            keep_open: Keep browser open after auth for manual use (default: False)
+            allow_localhost: Allow localhost resolution (default: False)
 
         Returns:
             Dictionary containing access_token, refresh_token, and expires_in,
@@ -117,85 +124,108 @@ class PlaywrightAuth:
 
         logger.info("🔐 Starting authentication process using Playwright")
 
-        with sync_playwright() as p:
-            browser = p.chromium.launch(
-                headless=headless,
-                args=[
-                    "--no-sandbox",
-                    "--disable-features=BlockInsecurePrivateNetworkRequests",
-                    "--disable-localhost-ipa",
-                    "--host-resolver-rules=MAP localhost 0.0.0.0, MAP 127.0.0.1 0.0.0.0, MAP ::1 0.0.0.0",
-                ],
+        browser_args = [
+            "--no-sandbox",
+            "--disable-features=BlockInsecurePrivateNetworkRequests",
+        ]
+        if not allow_localhost:
+            browser_args += [
+                "--disable-localhost-ipa",
+                "--host-resolver-rules=MAP localhost 0.0.0.0, MAP 127.0.0.1 0.0.0.0, MAP ::1 0.0.0.0",
+            ]
+
+        p = sync_playwright().start()
+        browser = p.chromium.launch(
+            headless=headless,
+            args=browser_args,
+        )
+
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0",
+            locale="en-US",
+            **(
+                {"no_viewport": True}
+                if keep_open
+                else {
+                    "viewport": {"width": 1280, "height": 720},
+                    "screen": {"width": 1366, "height": 768},
+                    "device_scale_factor": 1,
+                }
+            ),
+            # Input model
+            is_mobile=False,
+            has_touch=False,
+            # User preferences
+            color_scheme="light",
+            reduced_motion="no-preference",
+            forced_colors="none",
+            # Do not auto-grant permissions (matches reality)
+            permissions=[],
+        )
+
+        if prt_cookie:
+            context.add_cookies(
+                [
+                    {
+                        "name": "x-ms-RefreshTokenCredential",
+                        "value": prt_cookie,
+                        "domain": "login.microsoftonline.com",
+                        "path": "/",
+                        "httpOnly": True,
+                        "secure": True,
+                    }
+                ]
             )
 
-            context = browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0",
-                locale="en-US",
+        page = context.new_page()
+        logger.info(f"UA in use: {page.evaluate('navigator.userAgent')}")
 
-                viewport={"width": 1280, "height": 720},
-                screen={"width": 1366, "height": 768},
-                device_scale_factor=1,
+        logger.info(f"🔗 Opening auth URL: {auth_url}")
 
-                # Input model
-                is_mobile=False,
-                has_touch=False,
+        page.goto(auth_url)
+        page.wait_for_load_state("load")
 
-                # User preferences
-                color_scheme="light",
-                reduced_motion="no-preference",
-                forced_colors="none",
-
-                # Do not auto-grant permissions (matches reality)
-                permissions=[],
+        logger.info("🔍 Waiting for authentication to complete")
+        logger.info(f"Searching for this pattern in URL: {self.redirect_uri}")
+        redirect_uri_pattern = re.compile(rf"^{re.escape(self.redirect_uri)}")
+        try:
+            page.wait_for_url(
+                redirect_uri_pattern,
+                timeout=AUTH_TIMEOUT,
+                wait_until="domcontentloaded",
             )
+        except TimeoutError:
+            logger.error("⏱️ Timeout waiting for auth redirect.")
+            logger.error(f"Final URL at timeout: {page.url}")
+            context.close()
+            browser.close()
+            p.stop()
+            return None
+        except Exception as exc:
+            logger.error("❌ Authentication flow interrupted.")
+            logger.error(f"Last URL: {page.url}")
+            logger.error(f"Exception: {exc}")
+            context.close()
+            browser.close()
+            p.stop()
+            return None
 
-            if prt_cookie:
-                context.add_cookies(
-                    [
-                        {
-                            "name": "x-ms-RefreshTokenCredential",
-                            "value": prt_cookie,
-                            "domain": "login.microsoftonline.com",
-                            "path": "/",
-                            "httpOnly": True,
-                            "secure": True,
-                        }
-                    ]
-                )
+        final_url = page.url
+        logger.success("🔄 Redirection received.")
 
-            page = context.new_page()
-            logger.info(f"UA in use: {page.evaluate('navigator.userAgent')}")
+        # Let the callback page fully load to complete the auth flow (cookies, session, etc.)
+        page.wait_for_load_state("networkidle")
 
-            logger.info(f"🔗 Opening auth URL: {auth_url}")
-
-            page.goto(auth_url)
-            page.wait_for_load_state("load")
-
-            logger.info("🔍 Waiting for authentication to complete")
-            logger.info(f"Searching for this pattern in URL: {self.redirect_uri}")
-            redirect_uri_pattern = re.compile(rf"^{re.escape(self.redirect_uri)}")
-            try:
-                page.wait_for_url(
-                    redirect_uri_pattern,
-                    timeout=AUTH_TIMEOUT,
-                    wait_until="domcontentloaded",
-                )
-            except TimeoutError:
-                logger.error("⏱️ Timeout waiting for auth redirect.")
-                logger.error(f"Final URL at timeout: {page.url}")
-                return None
-            except Exception as exc:
-                logger.error("❌ Authentication flow interrupted.")
-                logger.error(f"Last URL: {page.url}")
-                logger.error(f"Exception: {exc}")
-                return None
-            else:
-                final_url = page.url
-                logger.success("🔄 Redirection received.")
-            finally:
-                context.close()
-                browser.close()
-                logger.info("🖥️ Browser closed.")
+        if keep_open:
+            self._playwright = p
+            self._browser = browser
+            self._context = context
+            self._page = page
+        else:
+            context.close()
+            browser.close()
+            p.stop()
+            logger.info("🖥️ Browser closed.")
 
         code = parse_qs(urlparse(final_url).query).get("code", [None])[0]
 
@@ -237,6 +267,31 @@ class PlaywrightAuth:
 
         return response_dict
 
+    def wait_for_browser_close(self) -> None:
+        """Block until the user closes the browser or presses Ctrl+C."""
+        if not hasattr(self, "_page"):
+            return
+        logger.info("🌐 Browser kept open for manual use. Press Ctrl+C to close.")
+        try:
+            while not self._page.is_closed():
+                self._page.wait_for_timeout(1000)
+        except (KeyboardInterrupt, Exception):
+            pass
+        finally:
+            try:
+                self._context.close()
+            except Exception:
+                pass
+            try:
+                self._browser.close()
+            except Exception:
+                pass
+            try:
+                self._playwright.stop()
+            except Exception:
+                pass
+            logger.info("🖥️ Browser closed.")
+
     def refresh_tokens(self, refresh_token: str) -> Optional[Dict[str, Any]]:
 
         response_dict = {
@@ -271,6 +326,3 @@ class PlaywrightAuth:
         response_dict["scope"] = tokens.get("scope")
 
         return response_dict
-
-
-

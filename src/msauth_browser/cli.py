@@ -12,7 +12,7 @@ import pyperclip
 # Local library imports
 from .core.auth import PlaywrightAuth
 from .core.tokens import Token
-from .core.config import get_config, list_configs
+from .configs import get_config, list_configs
 from .core.logbook import setup_logging
 from . import __version__
 
@@ -74,6 +74,20 @@ def get_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--allow-localhost",
+        action="store_true",
+        default=False,
+        help="Allow localhost resolution (disabled by default to prevent Okta Verify interaction).",
+    )
+
+    parser.add_argument(
+        "--keep-open",
+        action="store_true",
+        default=False,
+        help="Keep the browser open after authentication for manual use. Press Ctrl+C to close.",
+    )
+
+    parser.add_argument(
         "--refresh",
         action="store_true",
         default=False,
@@ -118,6 +132,8 @@ def main() -> int:
     tokens = auth_instance.get_tokens(
         prt_cookie=args.prt_cookie,
         headless=args.headless,
+        keep_open=args.keep_open,
+        allow_localhost=args.allow_localhost,
     )
 
     if not tokens:
@@ -166,5 +182,8 @@ def main() -> int:
             time.sleep((1 << 31) - 1)
         except KeyboardInterrupt:
             logger.info("🛑 Exiting on user interrupt")
+
+    if args.keep_open:
+        auth_instance.wait_for_browser_close()
 
     return 0

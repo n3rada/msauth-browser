@@ -1,13 +1,11 @@
-# msauth_browser/core/config.py
+# msauth_browser/configs/__init__.py
 
 # Built-in imports
 import json
 from dataclasses import dataclass
-from pathlib import Path
+from importlib.resources import files
 from typing import Any, Dict, Iterable, List, Optional
 
-
-CONFIG_DIR = Path(__file__).resolve().parent.parent / "configs"
 
 @dataclass(frozen=True)
 class AppConfig:
@@ -66,24 +64,23 @@ class AppConfig:
         return scopes
 
 
-def _load_predefined_configs(config_dir: Path) -> Dict[str, AppConfig]:
-    """Load JSON configuration files from ``config_dir``."""
+def _load_predefined_configs() -> Dict[str, AppConfig]:
+    """Load JSON configuration files from this package using importlib.resources."""
 
     configs: Dict[str, AppConfig] = {}
+    package_files = files(__package__)
 
-    if not config_dir.exists():
-        return configs
+    for resource in package_files.iterdir():
+        if not resource.name.endswith(".json"):
+            continue
 
-    for json_file in sorted(config_dir.glob("*.json")):
-        with json_file.open("r", encoding="utf-8") as handle:
-            payload = json.load(handle)
-
+        payload = json.loads(resource.read_text(encoding="utf-8"))
         config = AppConfig.from_dict(payload)
-        slug = str(payload.get("slug") or json_file.stem).lower()
+        slug = str(payload.get("slug") or resource.name.removesuffix(".json")).lower()
 
         if slug in configs:
             raise ValueError(
-                f"Duplicate configuration slug '{slug}' in {json_file.name}."
+                f"Duplicate configuration slug '{slug}' in {resource.name}."
             )
 
         configs[slug] = config
@@ -91,7 +88,7 @@ def _load_predefined_configs(config_dir: Path) -> Dict[str, AppConfig]:
     return configs
 
 
-PREDEFINED_CONFIGS = _load_predefined_configs(CONFIG_DIR)
+PREDEFINED_CONFIGS = _load_predefined_configs()
 
 
 def get_config(name: str) -> AppConfig:
